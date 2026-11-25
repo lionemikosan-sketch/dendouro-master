@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>伝導路マスター｜神経系 暗記トレーニング</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&display=swap');
+
+    :root {
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --ink: #2B1D16;
+      --ink-muted: #7C6559;
+      --cream: #FFF9F3;
+      --orange-main: #FF6B2B;
+      --orange-deep: #EA580C;
+      --orange-glow: rgba(255, 107, 43, 0.22);
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 20% 10%, #FDE7D4 0%, #F5ECE4 48%, #EFE5DC 100%);
+      color: var(--ink);
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+      font-feature-settings: "palt";
+    }
+
+    .app-shell {
+      max-width: 460px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      background: linear-gradient(180deg, #FFF7EE 0%, #FFFBF7 38%, #FFF6EC 100%);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+      box-shadow:
+        0 0 0 1px rgba(234, 88, 12, 0.08),
+        0 24px 64px -16px rgba(154, 52, 18, 0.16);
+    }
+
+    /* Ambient warm glow orbs */
+    .ambient-orb-1 {
+      position: absolute;
+      top: -90px;
+      right: -70px;
+      width: 240px;
+      height: 240px;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(255, 138, 76, 0.22) 0%, rgba(255, 180, 120, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambient-orb-2 {
+      position: absolute;
+      bottom: 80px;
+      left: -80px;
+      width: 220px;
+      height: 220px;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(251, 146, 60, 0.16) 0%, rgba(251, 146, 60, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Elevated warm glass card */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(251, 146, 60, 0.18);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.95) inset,
+        0 10px 28px -12px rgba(194, 65, 12, 0.12),
+        0 2px 6px -1px rgba(194, 65, 12, 0.05);
+    }
+
+    /* Tactile pushable chip */
+    .tactile-chip {
+      background: linear-gradient(180deg, #FFFFFF 0%, #FFFBF7 100%);
+      border: 1.5px solid rgba(251, 146, 60, 0.28);
+      border-bottom-width: 3.5px;
+      border-bottom-color: rgba(234, 88, 12, 0.24);
+      box-shadow: 0 4px 12px -4px rgba(194, 65, 12, 0.1);
+      transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1),
+                  border-color 0.15s ease,
+                  background-color 0.15s ease,
+                  box-shadow 0.15s ease;
+    }
+    .tactile-chip:hover {
+      border-color: #FB923C;
+      background: linear-gradient(180deg, #FFFFFF 0%, #FFF4EA 100%);
+      box-shadow: 0 8px 18px -6px rgba(234, 88, 12, 0.18);
+    }
+    .tactile-chip:active {
+      transform: translateY(2px) scale(0.985);
+      border-bottom-width: 1.5px;
+      box-shadow: 0 2px 4px -2px rgba(234, 88, 12, 0.12);
+    }
+
+    /* Floating bottom dock */
+    .floating-dock-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 460px;
+      padding: 0 14px calc(12px + var(--safe-bottom));
+      z-index: 40;
+      pointer-events: none;
+    }
+    .floating-dock {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(251, 146, 60, 0.22);
+      box-shadow:
+        0 14px 36px -8px rgba(154, 52, 18, 0.18),
+        0 2px 8px rgba(154, 52, 18, 0.06),
+        0 1px 0 rgba(255, 255, 255, 0.9) inset;
+      border-radius: 26px;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+    .animate-shake {
+      animation: shake 0.34s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.93) translateY(4px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes pulseOrange {
+      0% { box-shadow: 0 0 0 0 rgba(255, 107, 43, 0.45); }
+      70% { box-shadow: 0 0 0 9px rgba(255, 107, 43, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 107, 43, 0); }
+    }
+    .node-active {
+      animation: pulseOrange 1.6s infinite;
+    }
+
+    .red-sheet-hidden {
+      background: repeating-linear-gradient(
+        -45deg,
+        #FF5A1F,
+        #FF5A1F 10px,
+        #F04438 10px,
+        #F04438 20px
+      ) !important;
+      border-color: #DC2626 !important;
+      color: transparent !important;
+      user-select: none;
+      cursor: pointer;
+      position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
+    }
+    .red-sheet-hidden span {
+      opacity: 0 !important;
+    }
+    .red-sheet-hidden::after {
+      content: 'TAP TO PEEK';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.94);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .pb-nav {
+      padding-bottom: calc(6.2rem + var(--safe-bottom));
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="ambient-orb-1"></div>
+    <div class="ambient-orb-2"></div>
+
+    <!-- Top Glass Header -->
+    <header class="sticky top-0 z-30 bg-[#FFF9F3]/85 backdrop-blur-xl border-b border-orange-200/50 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF6B2B] via-[#FF8139] to-[#FFB049] flex items-center justify-center text-white shadow-[0_6px_16px_-4px_rgba(234,88,12,0.5)]">
+          <i data-lucide="git-branch" class="w-5 h-5 stroke-[2.4]"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-[16px] font-black tracking-tight text-[#2B1D16] leading-tight">伝導路マスター</h1>
+            <span class="px-1.5 py-0.5 rounded-md bg-orange-100 text-orange-700 text-[9px] font-extrabold tracking-wider uppercase">Ch.8</span>
+          </div>
+          <p class="text-[11px] font-semibold text-[#8C7062] leading-tight mt-0.5">神経系・通過順トレーニング</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- SVG Progress Ring Pill -->
+        <div id="header-mastery-pill" class="pl-1.5 pr-3 py-1 rounded-full bg-white/95 border border-orange-200/80 shadow-xs flex items-center gap-1.5">
+          <div class="relative w-6 h-6 flex items-center justify-center">
+            <svg class="w-6 h-6 -rotate-90" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9.5" fill="none" stroke="#FFEDD5" stroke-width="3"></circle>
+              <circle id="header-ring-fg" cx="12" cy="12" r="9.5" fill="none" stroke="#EA580C" stroke-width="3"
+                stroke-linecap="round" stroke-dasharray="59.69" stroke-dashoffset="59.69"
+                style="transition: stroke-dashoffset 0.5s cubic-bezier(0.22,1,0.36,1);"></circle>
+            </svg>
+            <i data-lucide="flame" class="w-3 h-3 text-orange-500 absolute"></i>
+          </div>
+          <span id="header-mastery-text" class="text-xs font-extrabold text-[#2B1D16] tabular-nums">0/10</span>
+        </div>
+
+        <button id="sound-toggle-btn" type="button" aria-label="効果音の切り替え"
+          class="w-9 h-9 rounded-2xl bg-white/95 border border-orange-200/70 hover:bg-orange-50 active:scale-95 transition flex items-center justify-center text-[#7C5A46] shadow-xs">
+          <i id="sound-icon" data-lucide="volume-2" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Scrollable Content -->
+    <main id="main-content" class="relative z-10 flex-1 overflow-y-auto px-4 pt-3.5 pb-nav">
+      <!-- Dynamic view renders here -->
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-[72px] left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 -translate-y-2 transition-all duration-200 max-w-[90vw]">
+      <div id="toast-inner" class="px-4 py-2 rounded-full shadow-xl text-xs font-extrabold text-white bg-[#2B1D16] flex items-center gap-1.5 whitespace-nowrap"></div>
+    </div>
+
+    <!-- Floating Glass Bottom Dock -->
+    <div class="floating-dock-wrap">
+      <nav class="floating-dock px-2 py-1.5 flex justify-around items-center">
+        <button type="button" data-tab="sequence" class="nav-btn flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-2xl transition min-w-[74px]">
+          <i data-lucide="list-ordered" class="w-5 h-5"></i>
+          <span class="text-[10px] font-extrabold tracking-tight">順番タップ</span>
+        </button>
+        <button type="button" data-tab="binary" class="nav-btn flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-2xl transition min-w-[74px]">
+          <i data-lucide="zap" class="w-5 h-5"></i>
+          <span class="text-[10px] font-extrabold tracking-tight">2択クイズ</span>
+        </button>
+        <button type="button" data-tab="fill" class="nav-btn flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-2xl transition min-w-[74px]">
+          <i data-lucide="puzzle" class="w-5 h-5"></i>
+          <span class="text-[10px] font-extrabold tracking-tight">穴埋め</span>
+        </button>
+        <button type="button" data-tab="guide" class="nav-btn flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-2xl transition min-w-[74px]">
+          <i data-lucide="book-open" class="w-5 h-5"></i>
+          <span class="text-[10px] font-extrabold tracking-tight">図鑑</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================
+    // 1. GROUNDED DATASET (第8章 神経系 伝導路 p.121-135)
+    // =========================================================
+    const PATHWAYS = [
+      {
+        id: 'pyramidal_lateral',
+        name: '錐体路（外側皮質脊髄路）',
+        shortName: '錐体路・外側',
+        category: 'descending',
+        direction: '下行性（運動）',
+        summary: '骨格筋の随意運動を指令する主経路（約80%の線維）。',
+        crossing: '延髄下端の「錐体交叉」で反対側へ交叉',
+        memo: '内包を栄養するレンズ核線条体動脈の出血・閉塞で反対側に片麻痺（痙性麻痺）が起こる。前角細胞・末梢神経など下位ニューロン障害では弛緩性麻痺。',
+        steps: [
+          { label: '大脳皮質 運動野', tag: '中心前回・巨大錐体細胞', detail: '上位運動ニューロンの起始部' },
+          { label: '内包', tag: '投射線維', detail: '視床と大脳基底核の間を通過' },
+          { label: '大脳脚（中脳）', tag: '中脳腹側', detail: '中脳の腹方を下行' },
+          { label: '橋（橋底部）', tag: '縦束', detail: '横橋線維と錯綜しながら下行' },
+          { label: '延髄（錐体）', tag: '延髄腹側', detail: '錐体と呼ばれる隆起を形成' },
+          { label: '錐体交叉', tag: '約80%が交叉', detail: '延髄下端で反対側へ交叉' },
+          { label: '脊髄・側索', tag: '外側皮質脊髄路', detail: '反対側の側索を下行' },
+          { label: '脊髄・前角細胞', tag: 'シナプス交代', detail: '下位運動ニューロンへ接続' },
+          { label: '前根 → 骨格筋', tag: '末梢神経', detail: '前根を経て支配筋へ到達' }
+        ]
+      },
+      {
+        id: 'pyramidal_anterior',
+        name: '錐体路（前皮質脊髄路）',
+        shortName: '錐体路・前',
+        category: 'descending',
+        direction: '下行性（運動）',
+        summary: '錐体交叉で交叉せず同側を下行する約20%の随意運動線維。',
+        crossing: '前角細胞に入る高さで交叉し、結果的に対側へ終わる',
+        memo: '延髄の錐体交叉では交叉しないが、脊髄の前角細胞に入る高さで交叉するため、すべての錐体路は対側の前角細胞に終わる。',
+        steps: [
+          { label: '大脳皮質 運動野', tag: '中心前回', detail: '巨大錐体細胞から起始' },
+          { label: '内包', tag: '投射線維', detail: '視床と大脳基底核の間を通過' },
+          { label: '大脳脚（中脳）', tag: '中脳腹側', detail: '中脳の腹方を下行' },
+          { label: '橋（橋底部）', tag: '縦束', detail: '橋底部を下行' },
+          { label: '延髄（錐体）', tag: '非交叉（約20%）', detail: '錐体交叉で交叉せずそのまま下行' },
+          { label: '脊髄・前索', tag: '前皮質脊髄路', detail: '同側の前索を下行' },
+          { label: '対側の前角細胞', tag: '脊髄の高さで交叉', detail: '前角に入る高さで反対側へ交叉' },
+          { label: '前根 → 骨格筋', tag: '末梢神経', detail: '前根を経て骨格筋を支配' }
+        ]
+      },
+      {
+        id: 'spinothalamic',
+        name: '外側脊髄視床路（温・痛覚）',
+        shortName: '温・痛覚',
+        category: 'somatosensory',
+        direction: '上行性（体性感覚）',
+        summary: '皮膚の痛覚と温度覚（冷覚・温覚）を大脳皮質へ伝える。',
+        crossing: '脊髄の後角で二次ニューロンに交代した直後に反対側へ交叉',
+        memo: '脊髄に入ってすぐ交叉して反対側の側索を上行するのが特徴。受容器は自由神経終末。',
+        steps: [
+          { label: '自由神経終末', tag: '受容器', detail: '痛覚・温度覚を受容' },
+          { label: '脊髄神経節', tag: '1次ニューロン', detail: '後根を経て脊髄へ入力' },
+          { label: '脊髄・後角', tag: '2次へ交代・交叉', detail: 'ここで交代し反対側へ交叉' },
+          { label: '反対側の脊髄・側索', tag: '外側脊髄視床路', detail: '反対側の側索を上行' },
+          { label: '視床', tag: '3次へ交代', detail: '感覚情報の中継点' },
+          { label: '内包', tag: '投射線維', detail: '視床から大脳皮質へ上行' },
+          { label: '体性感覚野（中心後回）', tag: '大脳皮質', detail: '感覚の種類や位置を判断' }
+        ]
+      },
+      {
+        id: 'dorsal_column',
+        name: '長後索路（触・圧覚）',
+        shortName: '触・圧覚',
+        category: 'somatosensory',
+        direction: '上行性（体性感覚）',
+        summary: 'マイスネル小体・パチニ小体からの触圧覚を伝える。',
+        crossing: '延髄の後索核で二次ニューロンに交代した直後に交叉し内側毛帯へ',
+        memo: '脊髄内は同側の後索を上行し、延髄の後索核で交代・交叉して内側毛帯（延髄・橋背側部・中脳被蓋腹外側）を上行する。',
+        steps: [
+          { label: 'マイスネル・パチニ小体', tag: '受容器', detail: '触圧覚を信号化' },
+          { label: '脊髄神経節', tag: '1次ニューロン', detail: '後根を経て脊髄へ入る' },
+          { label: '同側の脊髄・後索', tag: '長後索路', detail: '交叉せず同側の後索を上行' },
+          { label: '延髄・後索核', tag: '2次へ交代・交叉', detail: '延髄下部背側で交代し反対側へ' },
+          { label: '内側毛帯', tag: '延髄・橋・中脳', detail: '脳幹を上行して視床へ' },
+          { label: '視床', tag: '3次へ交代', detail: '三次ニューロンに接続' },
+          { label: '内包 → 体性感覚野', tag: '中心後回', detail: '内包を通り体性感覚野へ到達' }
+        ]
+      },
+      {
+        id: 'spinocerebellar',
+        name: '脊髄小脳路（深部知覚）',
+        shortName: '深部知覚',
+        category: 'somatosensory',
+        direction: '上行性（深部知覚）',
+        summary: '筋・腱・関節からの深部知覚を小脳へ伝える経路。',
+        crossing: '非交叉（同側の後索→胸髄核→同側の側索→下小脳脚→小脳）',
+        memo: '大脳皮質ではなく小脳に到達し、体位や平衡の照合・運動の円滑な調節に使われる。',
+        steps: [
+          { label: '筋紡錘・腱紡錘', tag: '受容器', detail: '筋・腱・関節の深部知覚を受容' },
+          { label: '脊髄神経節', tag: '1次ニューロン', detail: '後根を経て脊髄へ入る' },
+          { label: '同側の脊髄・後索', tag: '上行', detail: '同側の後索を胸髄まで上行' },
+          { label: '胸髄核', tag: '2次へ中継', detail: '胸髄の後角基部にある核' },
+          { label: '同側の脊髄・側索', tag: '後脊髄小脳路', detail: '同側の側索を上行（非交叉）' },
+          { label: '延髄・下小脳脚', tag: '小脳への連絡', detail: '延髄から小脳へ入る' },
+          { label: '小脳', tag: '小脳皮質', detail: '運動の協調・平衡調節に利用' }
+        ]
+      },
+      {
+        id: 'visual',
+        name: '視覚伝導路',
+        shortName: '視覚',
+        category: 'special',
+        direction: '上行性（特殊感覚）',
+        summary: '網膜の光刺激を後頭葉の視覚野へ伝える経路。',
+        crossing: '視神経交叉で網膜の「鼻側半」からの線維のみ交叉',
+        memo: '視索の一部は中脳の上丘に送られ、瞳孔反射（視覚の反射運動）に関係する。視床後下面の外側膝状体が中継核。',
+        steps: [
+          { label: '網膜・視細胞', tag: '光受容器', detail: '光刺激を受容' },
+          { label: '双極神経細胞', tag: '1次ニューロン', detail: '網膜内で神経節細胞へ伝達' },
+          { label: '神経節細胞 → 視神経', tag: '2次ニューロン', detail: '軸索が集まり視神経となる' },
+          { label: '視神経交叉', tag: '鼻側半のみ交叉', detail: '耳側半は交叉せず同側へ' },
+          { label: '視索', tag: '一部は中脳上丘へ', detail: '交叉・非交叉線維が集まる' },
+          { label: '外側膝状体', tag: '3次へ交代（視床）', detail: '視覚の中継核' },
+          { label: '内包後部 → 視放線', tag: '投射線維', detail: '後頭葉へ向かって広がる' },
+          { label: '後頭葉・視覚野', tag: '鳥距溝周囲', detail: '有線領とも呼ばれる' }
+        ]
+      },
+      {
+        id: 'auditory',
+        name: '聴覚伝導路',
+        shortName: '聴覚',
+        category: 'special',
+        direction: '上行性（特殊感覚）',
+        summary: '内耳の蝸牛からの音刺激を側頭葉の聴覚野へ伝える経路。',
+        crossing: '脳幹の蝸牛神経核で二次ニューロンに交代後に交叉し外側毛帯へ',
+        memo: '原則の3ニューロンではなく「四次ニューロン」まで経由するのがポイント！中継核は間脳の内側膝状体。',
+        steps: [
+          { label: '内耳・蝸牛', tag: '受容器', detail: '音刺激を受容（コルチ器）' },
+          { label: '蝸牛神経', tag: '1次ニューロン', detail: '内耳神経の一部として脳幹へ' },
+          { label: '蝸牛神経核', tag: '2次へ交代・交叉', detail: '脳幹にあり、交叉して外側毛帯へ' },
+          { label: '外側毛帯', tag: '上行', detail: '中脳へ向かって上行' },
+          { label: '中脳・下丘', tag: '3次へ交代', detail: '聴覚の反射運動にも関与' },
+          { label: '下丘腕 → 内側膝状体', tag: '4次へ交代（視床）', detail: '間脳の聴覚中継核' },
+          { label: '聴放線 → 側頭葉・聴覚野', tag: '側頭葉上面', detail: '聴覚野へ到達' }
+        ]
+      },
+      {
+        id: 'vestibular',
+        name: '平衡覚伝導路',
+        shortName: '平衡覚',
+        category: 'special',
+        direction: '上行性（特殊感覚）',
+        summary: '内耳の前庭器官からの平衡感覚を主に小脳へ伝える経路。',
+        crossing: '大部分が小脳へ向かう',
+        memo: '大脳皮質に向かう線維はごく少なく、平衡感覚はほとんど意識されることはない。',
+        steps: [
+          { label: '内耳・前庭器官', tag: '受容器', detail: '前庭・半規管で平衡覚を受容' },
+          { label: '前庭神経', tag: '内耳神経', detail: '脳幹へ入力' },
+          { label: '脳幹・前庭神経核', tag: '中継核', detail: '脳幹の神経核で中継' },
+          { label: '小脳', tag: '大部分が到達', detail: '体位・バランスの調節に関与' }
+        ]
+      },
+      {
+        id: 'gustatory',
+        name: '味覚伝導路',
+        shortName: '味覚',
+        category: 'special',
+        direction: '上行性（特殊感覚）',
+        summary: '舌の味蕾で受容された味覚を大脳皮質の味覚野へ伝える経路。',
+        crossing: '延髄の孤束核から視床を経て味覚野へ',
+        memo: '舌の前2/3の味覚は顔面神経（鼓索神経）、後ろ1/3の味覚は舌咽神経が伝える。味覚野は中心後回下部にある。',
+        steps: [
+          { label: '舌・味蕾', tag: '受容器', detail: '味覚刺激を受容' },
+          { label: '顔面神経・舌咽神経', tag: '前2/3・後1/3', detail: '脳幹へ味覚を伝える' },
+          { label: '延髄・孤束核', tag: '中継核', detail: '延髄の孤束核へ入力' },
+          { label: '視床', tag: '中継', detail: '視床を経由' },
+          { label: '大脳皮質・味覚野', tag: '中心後回下部', detail: '体性感覚野の最下部付近' }
+        ]
+      },
+      {
+        id: 'olfactory',
+        name: '嗅覚伝導路',
+        shortName: '嗅覚',
+        category: 'special',
+        direction: '上行性（特殊感覚）',
+        summary: '鼻腔天井の嗅上皮から大脳辺縁系の嗅覚野へ伝える経路。',
+        crossing: '例外的に「視床を経由しない」',
+        memo: '嗅覚野は大脳辺縁系（古皮質）に属し、側頭葉の内側面に位置する。視床を通らない唯一の例外として頻出！',
+        steps: [
+          { label: '鼻腔天井・嗅上皮', tag: '受容器', detail: '嗅覚刺激を受容' },
+          { label: '嗅神経', tag: '篩板を貫く', detail: '第I脳神経として頭蓋腔へ' },
+          { label: '嗅球', tag: '中継', detail: '視床を経由せず直接大脳へ' },
+          { label: '大脳辺縁系・嗅覚野', tag: '古皮質・側頭葉内側', detail: '視床を経由しない例外経路' }
+        ]
+      }
+    ];
+
+    const CONCEPT_BINARY_QUESTIONS = [
+      {
+        topic: 'crossing',
+        pathwayName: '錐体路（外側皮質脊髄路）',
+        prompt: '錐体路の約80%の線維が左右に交叉する場所は？',
+        correct: '延髄下端（錐体交叉）',
+        wrong: '中脳（大脳脚）',
+        explain: '錐体路の約80%は延髄下端の錐体交叉で反対側の側索（外側皮質脊髄路）へ移ります。'
+      },
+      {
+        topic: 'crossing',
+        pathwayName: '錐体路（前皮質脊髄路）',
+        prompt: '錐体交叉で交叉しなかった残り約20%の線維は、どこで交叉する？',
+        correct: '前角細胞に入る高さで交叉',
+        wrong: '交叉せず同側の筋を支配',
+        explain: '同側の前索を下行した後、前角細胞に入る高さで交叉するため、結果的にすべての錐体路が対側の前角細胞に終わります。'
+      },
+      {
+        topic: 'crossing',
+        pathwayName: '外側脊髄視床路（温・痛覚）',
+        prompt: '温・痛覚（外側脊髄視床路）が反対側へ交叉する場所は？',
+        correct: '脊髄（後角で交代した直後）',
+        wrong: '延髄（後索核で交代した直後）',
+        explain: '温・痛覚は脊髄の後角で二次ニューロンに交代し、すぐ交叉して反対側の側索を上行します。'
+      },
+      {
+        topic: 'crossing',
+        pathwayName: '長後索路（触・圧覚）',
+        prompt: '触・圧覚（長後索路）が反対側へ交叉して内側毛帯をつくる場所は？',
+        correct: '延髄（後索核で交代した直後）',
+        wrong: '脊髄（後角で交代した直後）',
+        explain: '長後索路は脊髄内を同側の後索のまま上行し、延髄の後索核で二次ニューロンに交代後に交叉して内側毛帯になります。'
+      },
+      {
+        topic: 'crossing',
+        pathwayName: '脊髄小脳路（深部知覚）',
+        prompt: '深部知覚を伝える後脊髄小脳路は、脊髄のどちら側を上行する？',
+        correct: '同側の側索（非交叉）',
+        wrong: '反対側の側索（交叉）',
+        explain: '胸髄核で二次ニューロンに中継された後、同側の側索を後脊髄小脳路として上行し、延髄の下小脳脚から小脳へ達します。'
+      },
+      {
+        topic: 'special',
+        pathwayName: '嗅覚伝導路',
+        prompt: '感覚伝導路の中で、例外的に「視床を経由しない」ものは？',
+        correct: '嗅覚伝導路',
+        wrong: '味覚伝導路',
+        explain: '嗅覚情報は例外的に視床を経由せず、嗅球から大脳辺縁系（古皮質）の嗅覚野へ直接送られます。'
+      },
+      {
+        topic: 'special',
+        pathwayName: '視覚 vs 聴覚',
+        prompt: '「外側膝状体」が中継核となっている感覚はどっち？',
+        correct: '視覚伝導路',
+        wrong: '聴覚伝導路',
+        explain: '視床後下面の外側膝状体は「視覚」、内側膝状体は「聴覚」の中継核です。'
+      },
+      {
+        topic: 'special',
+        pathwayName: '視覚 vs 聴覚',
+        prompt: '「内側膝状体」と「中脳の下丘」を経由する感覚はどっち？',
+        correct: '聴覚伝導路',
+        wrong: '視覚伝導路',
+        explain: '聴覚伝導路は蝸牛神経核 → 外側毛帯 → 中脳の下丘 → 下丘腕 → 内側膝状体 → 聴放線 → 聴覚野を通ります。'
+      },
+      {
+        topic: 'special',
+        pathwayName: '視覚伝導路',
+        prompt: '視神経交叉で反対側へ交叉するのは、網膜のどちら側の線維？',
+        correct: '鼻側半からの線維のみ',
+        wrong: '耳側半からの線維のみ',
+        explain: '視神経交叉では網膜の鼻側半からの線維だけが交叉し、耳側半は交叉しません。'
+      },
+      {
+        topic: 'special',
+        pathwayName: '聴覚伝導路',
+        prompt: '聴覚伝導路が側頭葉の聴覚野に達するまでに経由するニューロン数は？',
+        correct: '四次ニューロンまで（4つ）',
+        wrong: '三次ニューロンまで（3つ）',
+        explain: '上行性伝導路は原則3ニューロンですが、聴覚伝導路は中脳の下丘も中継するため四次ニューロンまで経由します。'
+      },
+      {
+        topic: 'crossing',
+        pathwayName: '受容器の対応',
+        prompt: '温・痛覚（外側脊髄視床路）の感覚受容器はどっち？',
+        correct: '自由神経終末',
+        wrong: 'マイスネル小体・パチニ小体',
+        explain: '痛覚と温度覚は自由神経終末、触圧覚はマイスネル小体やパチニ小体、深部知覚は筋紡錘・腱紡錘で受容されます。'
+      },
+      {
+        topic: 'special',
+        pathwayName: '味覚伝導路',
+        prompt: '味覚刺激が顔面神経・舌咽神経で最初に伝えられる延髄の核は？',
+        correct: '孤束核',
+        wrong: '後索核',
+        explain: '舌の味蕾からの味覚刺激は、顔面神経・舌咽神経によって延髄の孤束核へ伝えられ、視床を経て味覚野（中心後回下部）へ終わります。'
+      },
+      {
+        topic: 'crossing',
+        pathwayName: '臨床（脳出血）',
+        prompt: '内包での脳出血（上位運動ニューロン障害）で起こる麻痺は？',
+        correct: '反対側の痙性麻痺',
+        wrong: '同側の弛緩性麻痺',
+        explain: '内包（レンズ核線条体動脈の支配域）の障害では出血側と反対側に片麻痺（痙性麻痺・腱反射亢進）が起こります。'
+      },
+      {
+        topic: 'crossing',
+        pathwayName: '錐体路 vs 錐体外路',
+        prompt: '骨格筋の協調を無意識のうちに調節する「赤核脊髄路・前庭脊髄路」は？',
+        correct: '錐体外路',
+        wrong: '錐体路',
+        explain: '赤核脊髄路、視蓋脊髄路、網様体脊髄路、前庭脊髄路、オリーブ脊髄路などは錐体外路と呼ばれ、無意識の筋協調を調節します。'
+      },
+      {
+        topic: 'special',
+        pathwayName: '平衡覚伝導路',
+        prompt: '前庭神経核からの線維の大部分が向かう先は？',
+        correct: '小脳',
+        wrong: '大脳皮質 頭頂葉',
+        explain: '前庭神経核からの線維は大部分が小脳に入り、大脳皮質に向かう線維はごく少なくほとんど意識されません。'
+      }
+    ];
+
+    // Warm, editorial tangerine-harmonized category palette
+    const CATEGORY_META = {
+      descending: {
+        label: '下行性（運動）',
+        badgeBg: 'bg-orange-100 text-orange-700 border border-orange-200/80',
+        accent: '#EA580C',
+        border: 'border-orange-200',
+        softBg: 'bg-orange-50/90 border border-orange-200/60',
+        nodeDone: 'bg-gradient-to-br from-[#FF6B2B] to-[#EA580C] text-white border-[#EA580C] shadow-xs',
+        lineDone: 'bg-gradient-to-b from-orange-400 to-amber-400',
+        dotDone: 'bg-orange-500',
+        icon: 'arrow-down-circle'
+      },
+      somatosensory: {
+        label: '上行性（体性感覚）',
+        badgeBg: 'bg-teal-50 text-teal-700 border border-teal-200/80',
+        accent: '#0D9488',
+        border: 'border-teal-200',
+        softBg: 'bg-teal-50/70 border border-teal-200/60',
+        nodeDone: 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white border-teal-600 shadow-xs',
+        lineDone: 'bg-gradient-to-b from-teal-400 to-emerald-400',
+        dotDone: 'bg-teal-500',
+        icon: 'arrow-up-circle'
+      },
+      special: {
+        label: '上行性（特殊感覚）',
+        badgeBg: 'bg-amber-100/90 text-amber-800 border border-amber-300/70',
+        accent: '#D97706',
+        border: 'border-amber-200',
+        softBg: 'bg-amber-50/90 border border-amber-200/70',
+        nodeDone: 'bg-gradient-to-br from-amber-500 to-orange-500 text-white border-amber-500 shadow-xs',
+        lineDone: 'bg-gradient-to-b from-amber-400 to-orange-400',
+        dotDone: 'bg-amber-500',
+        icon: 'sparkles'
+      }
+    };
+
+    // =========================================================
+    // 2. SOUND ENGINE (Web Audio API)
+    // =========================================================
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      return audioCtx;
+    }
+
+    function playTone(type, stepIndex = 0) {
+      if (!state.soundOn) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (type === 'step') {
+        const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51, 1567.98];
+        const freq = notes[stepIndex % notes.length];
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.11, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+        osc.start(now);
+        osc.stop(now + 0.17);
+      } else if (type === 'wrong') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(195, now);
+        osc.frequency.linearRampToValueAtTime(145, now + 0.16);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.start(now);
+        osc.stop(now + 0.19);
+      } else if (type === 'clear') {
+        const chord = [523.25, 659.25, 783.99, 1046.50];
+        chord.forEach((freq, i) => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.connect(g);
+          g.connect(ctx.destination);
+          o.type = 'sine';
+          const t = now + i * 0.06;
+          o.frequency.setValueAtTime(freq, t);
+          g.gain.setValueAtTime(0.09, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          o.start(t);
+          o.stop(t + 0.36);
+        });
+      }
+    }
+
+    // =========================================================
+    // 3. APP STATE & PERSISTENCE
+    // =========================================================
+    const STORAGE_KEY = 'dendouro_master_v1';
+
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return { mastered: {}, binaryBest: 0, fillCleared: 0, soundOn: true };
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          mastered: state.mastered,
+          binaryBest: state.binaryBest,
+          fillCleared: state.fillCleared,
+          soundOn: state.soundOn
+        }));
+      } catch (e) {}
+    }
+
+    const saved = loadProgress();
+
+    const state = {
+      activeTab: 'sequence',
+      soundOn: saved.soundOn !== false,
+      mastered: saved.mastered || {},
+      binaryBest: saved.binaryBest || 0,
+      fillCleared: saved.fillCleared || 0,
+
+      seq: {
+        pathwayId: 'pyramidal_lateral',
+        hardMode: false,
+        progress: 0,
+        mistakes: 0,
+        chips: [],
+        wrongChipId: null,
+        hintChipId: null,
+        completed: false
+      },
+
+      bin: {
+        filter: 'all',
+        queue: [],
+        index: 0,
+        score: 0,
+        combo: 0,
+        maxCombo: 0,
+        answered: null,
+        finished: false
+      },
+
+      fill: {
+        pathwayId: 'pyramidal_lateral',
+        blankIndices: [],
+        activeBlankIdx: null,
+        filled: {},
+        choices: [],
+        wrongChoice: null,
+        completed: false
+      },
+
+      guide: {
+        filter: 'all',
+        redSheet: false,
+        revealedNodes: {},
+        expandedId: 'pyramidal_lateral'
+      }
+    };
+
+    // =========================================================
+    // 4. UTILITIES
+    // =========================================================
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function getPathway(id) {
+      return PATHWAYS.find(p => p.id === id) || PATHWAYS[0];
+    }
+
+    let toastTimer = null;
+    function showToast(msg, colorClass = 'bg-[#2B1D16]') {
+      const toast = document.getElementById('toast');
+      const inner = document.getElementById('toast-inner');
+      if (!toast || !inner) return;
+      inner.className = `px-4 py-2 rounded-full shadow-xl text-xs font-extrabold text-white flex items-center gap-1.5 whitespace-nowrap ${colorClass}`;
+      inner.textContent = msg;
+      toast.classList.remove('opacity-0', '-translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-2');
+      }, 1700);
+    }
+
+    function fireConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 55,
+          spread: 65,
+          origin: { y: 0.65 },
+          colors: ['#FF6B2B', '#FFA048', '#F59E0B', '#FB7185', '#14B8A6'],
+          disableForReducedMotion: true
+        });
+      }
+    }
+
+    // =========================================================
+    // 5. MODE INITIALIZERS
+    // =========================================================
+    function initSequence(pathwayId = state.seq.pathwayId) {
+      const pw = getPathway(pathwayId);
+      state.seq.pathwayId = pw.id;
+      state.seq.progress = 0;
+      state.seq.mistakes = 0;
+      state.seq.wrongChipId = null;
+      state.seq.hintChipId = null;
+      state.seq.completed = false;
+
+      const baseChips = pw.steps.map((s, idx) => ({
+        id: `s_${idx}`,
+        stepIdx: idx,
+        label: s.label,
+        isDecoy: false,
+        used: false
+      }));
+
+      let decoys = [];
+      if (state.seq.hardMode) {
+        const existingLabels = new Set(pw.steps.map(s => s.label));
+        const pool = [];
+        PATHWAYS.forEach(other => {
+          if (other.id !== pw.id) {
+            other.steps.forEach(st => {
+              if (!existingLabels.has(st.label) && !pool.includes(st.label)) {
+                pool.push(st.label);
+              }
+            });
+          }
+        });
+        decoys = shuffle(pool).slice(0, 2).map((lbl, idx) => ({
+          id: `d_${idx}`,
+          stepIdx: -1,
+          label: lbl,
+          isDecoy: true,
+          used: false
+        }));
+      }
+
+      state.seq.chips = shuffle([...baseChips, ...decoys]);
+    }
+
+    function buildBinaryQuestions(filter) {
+      const orderQs = [];
+      PATHWAYS.forEach(pw => {
+        for (let i = 0; i < pw.steps.length - 1; i++) {
+          const curr = pw.steps[i];
+          const next = pw.steps[i + 1];
+          const sameOthers = pw.steps
+            .filter((_, idx) => idx !== i && idx !== i + 1)
+            .map(s => s.label);
+          let wrongLabel = '';
+          if (sameOthers.length > 0 && Math.random() < 0.7) {
+            wrongLabel = sameOthers[Math.floor(Math.random() * sameOthers.length)];
+          } else {
+            const otherPool = PATHWAYS.flatMap(p => p.steps.map(s => s.label))
+              .filter(l => l !== curr.label && l !== next.label);
+            wrongLabel = otherPool[Math.floor(Math.random() * otherPool.length)];
+          }
+
+          orderQs.push({
+            topic: 'order',
+            pathwayName: pw.name,
+            category: pw.category,
+            prompt: `「${curr.label}」の次に通るのは？`,
+            correct: next.label,
+            wrong: wrongLabel,
+            explain: `${pw.shortName}の順路：${curr.label} → ${next.label}（${next.tag}）`
+          });
+        }
+      });
+
+      let pool = [];
+      if (filter === 'order') {
+        pool = orderQs;
+      } else if (filter === 'crossing') {
+        pool = CONCEPT_BINARY_QUESTIONS.filter(q => q.topic === 'crossing');
+      } else if (filter === 'special') {
+        pool = [
+          ...CONCEPT_BINARY_QUESTIONS.filter(q => q.topic === 'special'),
+          ...orderQs.filter(q => q.category === 'special')
+        ];
+      } else {
+        pool = [...shuffle(orderQs).slice(0, 12), ...CONCEPT_BINARY_QUESTIONS];
+      }
+
+      return shuffle(pool).slice(0, 10).map(q => {
+        const flip = Math.random() < 0.5;
+        return {
+          ...q,
+          left: flip ? q.correct : q.wrong,
+          right: flip ? q.wrong : q.correct,
+          correctSide: flip ? 'left' : 'right'
+        };
+      });
+    }
+
+    function initBinary(filter = state.bin.filter) {
+      state.bin.filter = filter;
+      state.bin.queue = buildBinaryQuestions(filter);
+      state.bin.index = 0;
+      state.bin.score = 0;
+      state.bin.combo = 0;
+      state.bin.maxCombo = 0;
+      state.bin.answered = null;
+      state.bin.finished = false;
+    }
+
+    function initFill(pathwayId = state.fill.pathwayId) {
+      const pw = getPathway(pathwayId);
+      state.fill.pathwayId = pw.id;
+      const total = pw.steps.length;
+      const count = total <= 4 ? 1 : 2;
+      const candidateIndices = [];
+      for (let i = 1; i < total; i++) candidateIndices.push(i);
+      const picked = shuffle(candidateIndices).slice(0, count).sort((a, b) => a - b);
+
+      state.fill.blankIndices = picked;
+      state.fill.activeBlankIdx = picked[0];
+      state.fill.filled = {};
+      state.fill.wrongChoice = null;
+      state.fill.completed = false;
+      buildFillChoices();
+    }
+
+    function buildFillChoices() {
+      const pw = getPathway(state.fill.pathwayId);
+      const targetIdx = state.fill.activeBlankIdx;
+      if (targetIdx === null || targetIdx === undefined) {
+        state.fill.choices = [];
+        return;
+      }
+      const correctLabel = pw.steps[targetIdx].label;
+      const existingInPw = new Set(pw.steps.map(s => s.label));
+      const pool = [];
+      PATHWAYS.forEach(other => {
+        other.steps.forEach(st => {
+          if (st.label !== correctLabel && !existingInPw.has(st.label) && !pool.includes(st.label)) {
+            pool.push(st.label);
+          }
+        });
+      });
+      const distractors = shuffle(pool).slice(0, 3);
+      state.fill.choices = shuffle([correctLabel, ...distractors]);
+    }
+
+    // =========================================================
+    // 6. EVENT HANDLERS
+    // =========================================================
+    function handleSequenceTap(chipId) {
+      if (state.seq.completed) return;
+      const pw = getPathway(state.seq.pathwayId);
+      const chip = state.seq.chips.find(c => c.id === chipId);
+      if (!chip || chip.used) return;
+
+      const expectedIdx = state.seq.progress;
+      if (!chip.isDecoy && chip.stepIdx === expectedIdx) {
+        chip.used = true;
+        state.seq.progress += 1;
+        state.seq.wrongChipId = null;
+        state.seq.hintChipId = null;
+
+        if (state.seq.progress >= pw.steps.length) {
+          state.seq.completed = true;
+          state.mastered[pw.id] = (state.mastered[pw.id] || 0) + 1;
+          saveProgress();
+          playTone('clear');
+          fireConfetti();
+        } else {
+          playTone('step', expectedIdx);
+        }
+        render();
+        const routeEl = document.getElementById('seq-route-scroll');
+        if (routeEl) routeEl.scrollTop = routeEl.scrollHeight;
+      } else {
+        state.seq.mistakes += 1;
+        state.seq.wrongChipId = chipId;
+        playTone('wrong');
+        showToast(chip.isDecoy ? 'ダミーの部位です！' : '順番が違います。もう一度！', 'bg-rose-600');
+        render();
+        setTimeout(() => {
+          state.seq.wrongChipId = null;
+          render();
+        }, 420);
+      }
+    }
+
+    function handleSequenceHint() {
+      if (state.seq.completed) return;
+      const expectedIdx = state.seq.progress;
+      const targetChip = state.seq.chips.find(c => !c.isDecoy && c.stepIdx === expectedIdx);
+      if (targetChip) {
+        state.seq.hintChipId = targetChip.id;
+        showToast(`ヒント：次は「${targetChip.label}」`, 'bg-amber-600');
+        render();
+      }
+    }
+
+    function handleBinaryAnswer(side) {
+      if (state.bin.finished || state.bin.answered) return;
+      const q = state.bin.queue[state.bin.index];
+      const isCorrect = side === q.correctSide;
+      state.bin.answered = { selectedSide: side, isCorrect };
+      if (isCorrect) {
+        state.bin.score += 1;
+        state.bin.combo += 1;
+        if (state.bin.combo > state.bin.maxCombo) state.bin.maxCombo = state.bin.combo;
+        playTone('step', state.bin.combo);
+      } else {
+        state.bin.combo = 0;
+        playTone('wrong');
+      }
+      render();
+    }
+
+    function handleBinaryNext() {
+      if (!state.bin.answered) return;
+      if (state.bin.index + 1 >= state.bin.queue.length) {
+        state.bin.finished = true;
+        if (state.bin.score > state.binaryBest) {
+          state.binaryBest = state.bin.score;
+          saveProgress();
+        }
+        if (state.bin.score >= 8) {
+          playTone('clear');
+          fireConfetti();
+        }
+      } else {
+        state.bin.index += 1;
+        state.bin.answered = null;
+      }
+      render();
+    }
+
+    function handleFillChoice(choiceLabel) {
+      if (state.fill.completed) return;
+      const pw = getPathway(state.fill.pathwayId);
+      const targetIdx = state.fill.activeBlankIdx;
+      const correctLabel = pw.steps[targetIdx].label;
+
+      if (choiceLabel === correctLabel) {
+        state.fill.filled[targetIdx] = choiceLabel;
+        state.fill.wrongChoice = null;
+        const nextBlank = state.fill.blankIndices.find(idx => !state.fill.filled[idx]);
+        if (nextBlank !== undefined) {
+          state.fill.activeBlankIdx = nextBlank;
+          playTone('step', Object.keys(state.fill.filled).length);
+          buildFillChoices();
+        } else {
+          state.fill.activeBlankIdx = null;
+          state.fill.completed = true;
+          state.fillCleared += 1;
+          saveProgress();
+          playTone('clear');
+          fireConfetti();
+        }
+        render();
+      } else {
+        state.fill.wrongChoice = choiceLabel;
+        playTone('wrong');
+        showToast('ちがいます！前後のつながりを確認しよう', 'bg-rose-600');
+        render();
+        setTimeout(() => {
+          state.fill.wrongChoice = null;
+          render();
+        }, 420);
+      }
+    }
+
+    // =========================================================
+    // 7. RENDER FUNCTIONS
+    // =========================================================
+    function updateHeaderAndNav() {
+      const masteredCount = Object.keys(state.mastered).filter(k => state.mastered[k] > 0).length;
+      const masteryText = document.getElementById('header-mastery-text');
+      if (masteryText) masteryText.textContent = `${masteredCount}/${PATHWAYS.length}`;
+
+      const ringFg = document.getElementById('header-ring-fg');
+      if (ringFg) {
+        const circumference = 59.69;
+        const offset = circumference * (1 - masteredCount / PATHWAYS.length);
+        ringFg.setAttribute('stroke-dashoffset', offset.toFixed(2));
+      }
+
+      const soundIcon = document.getElementById('sound-icon');
+      if (soundIcon) {
+        soundIcon.setAttribute('data-lucide', state.soundOn ? 'volume-2' : 'volume-x');
+      }
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === state.activeTab;
+        btn.className = `nav-btn flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-[20px] transition-all duration-200 min-w-[74px] ${
+          isActive
+            ? 'bg-gradient-to-br from-[#FF6B2B] to-[#FF8A3D] text-white shadow-[0_6px_16px_-4px_rgba(234,88,12,0.5)] scale-[1.03]'
+            : 'text-[#8C7062] hover:text-[#EA580C] hover:bg-orange-50/70'
+        }`;
+      });
+    }
+
+    function renderSequenceView() {
+      const pw = getPathway(state.seq.pathwayId);
+      const meta = CATEGORY_META[pw.category];
+      const nextPwIndex = (PATHWAYS.findIndex(p => p.id === pw.id) + 1) % PATHWAYS.length;
+      const nextPw = PATHWAYS[nextPwIndex];
+
+      const selectorHtml = PATHWAYS.map(p => {
+        const isSel = p.id === pw.id;
+        const isDone = (state.mastered[p.id] || 0) > 0;
+        return `
+          <button type="button" data-action="seq-select" data-id="${p.id}"
+            class="shrink-0 px-3.5 py-2 rounded-2xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
+              isSel
+                ? 'bg-gradient-to-r from-[#FF6B2B] to-[#FF8B3E] text-white shadow-[0_6px_14px_-4px_rgba(234,88,12,0.48)]'
+                : 'bg-white/90 text-[#6B5449] border border-orange-200/70 hover:border-orange-300'
+            }">
+            ${isDone ? `<span class="${isSel ? 'text-amber-200' : 'text-orange-500'}">★</span>` : ''}
+            ${p.shortName}
+          </button>
+        `;
+      }).join('');
+
+      // Mini progress dots strip
+      const dotsHtml = pw.steps.map((_, idx) => {
+        const done = idx < state.seq.progress;
+        const curr = idx === state.seq.progress && !state.seq.completed;
+        return `<span class="h-1.5 flex-1 rounded-full transition-all duration-300 ${
+          done ? 'bg-gradient-to-r from-[#FF6B2B] to-[#FFA048]' : curr ? 'bg-orange-300 animate-pulse' : 'bg-orange-100'
+        }"></span>`;
+      }).join('');
+
+      const routeHtml = pw.steps.map((step, idx) => {
+        const isDone = idx < state.seq.progress;
+        const isCurrent = idx === state.seq.progress && !state.seq.completed;
+        const isLast = idx === pw.steps.length - 1;
+        return `
+          <div class="flex items-stretch gap-3">
+            <div class="flex flex-col items-center">
+              <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center text-[11px] font-black shrink-0 transition-all tabular-nums ${
+                isDone
+                  ? meta.nodeDone
+                  : isCurrent
+                    ? 'bg-white border-[#FF6B2B] text-[#EA580C] node-active'
+                    : 'bg-orange-50/80 border-orange-200/70 text-[#B89B8C]'
+              }">
+                ${isDone ? '✓' : idx + 1}
+              </div>
+              ${!isLast ? `<div class="w-[2.5px] flex-1 min-h-[14px] my-0.5 rounded-full transition-colors ${isDone ? meta.lineDone : 'bg-orange-100'}"></div>` : ''}
+            </div>
+            <div class="flex-1 pb-2">
+              ${isDone
+                ? `<div class="animate-pop flex items-center justify-between gap-2 bg-white border ${meta.border} rounded-2xl px-3.5 py-2 shadow-xs">
+                     <span class="text-[13px] font-extrabold text-[#2B1D16]">${step.label}</span>
+                     <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full ${meta.badgeBg} shrink-0">${step.tag}</span>
+                   </div>`
+                : isCurrent
+                  ? `<div class="border-2 border-dashed border-[#FF8547] bg-gradient-to-r from-orange-50/90 to-amber-50/70 rounded-2xl px-3.5 py-2 flex items-center justify-between">
+                       <span class="text-xs font-extrabold text-[#EA580C]">つぎの通過部位をタップ…</span>
+                       <span class="text-[11px] font-black text-orange-400 tabular-nums">${idx + 1} / ${pw.steps.length}</span>
+                     </div>`
+                  : `<div class="bg-[#FFF5EB]/80 border border-orange-100/80 rounded-2xl px-3.5 py-1.5 text-[11px] font-bold text-[#B89B8C]">
+                       STEP ${idx + 1}
+                     </div>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const chipsHtml = state.seq.chips.map(chip => {
+        const isWrong = state.seq.wrongChipId === chip.id;
+        const isHint = state.seq.hintChipId === chip.id;
+        if (chip.used) {
+          return `
+            <button type="button" disabled
+              class="px-3 py-3 rounded-2xl text-xs font-bold bg-orange-50/60 text-[#C8B2A6] border border-orange-100/70 line-through transition">
+              ${chip.label}
+            </button>
+          `;
+        }
+        return `
+          <button type="button" data-action="seq-tap" data-chip="${chip.id}"
+            class="px-3 py-3.5 rounded-2xl text-[13px] font-extrabold text-[#2B1D16] text-center leading-snug ${
+              isWrong
+                ? 'bg-rose-50 border-2 border-rose-500 text-rose-700 animate-shake'
+                : isHint
+                  ? 'bg-amber-50 border-2 border-amber-400 text-amber-900 ring-2 ring-amber-300/70 shadow-sm'
+                  : 'tactile-chip'
+            }">
+            ${chip.label}
+          </button>
+        `;
+      }).join('');
+
+      return `
+        <div class="space-y-3.5">
+          <!-- Pathway Horizontal Picker -->
+          <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+            ${selectorHtml}
+          </div>
+
+          <!-- Active Pathway Card -->
+          <div class="glass-card rounded-[26px] p-4">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${meta.badgeBg} mb-1.5">
+                  <i data-lucide="${meta.icon}" class="w-3 h-3"></i>
+                  ${pw.direction}
+                </span>
+                <h2 class="text-[16px] font-black text-[#2B1D16] tracking-tight leading-snug">${pw.name}</h2>
+              </div>
+              <button type="button" data-action="seq-toggle-hard"
+                class="shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-extrabold transition active:scale-95 ${
+                  state.seq.hardMode
+                    ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-sm'
+                    : 'bg-orange-50 text-[#8C6855] border border-orange-200/80'
+                }">
+                ${state.seq.hardMode ? '🔥 ダミーあり' : '標準'}
+              </button>
+            </div>
+
+            <p class="text-xs font-medium text-[#7C6559] mb-3">${pw.summary}</p>
+
+            <!-- Step Dots Progress Strip -->
+            <div class="flex gap-1 mb-3.5">${dotsHtml}</div>
+
+            <!-- Route Chain -->
+            <div id="seq-route-scroll" class="max-h-[245px] overflow-y-auto pr-1 pt-0.5">
+              ${routeHtml}
+            </div>
+          </div>
+
+          <!-- Completion Card OR Tap Board -->
+          ${state.seq.completed ? `
+            <div class="animate-pop bg-gradient-to-br from-[#FF5E1E] via-[#FF7A33] to-[#FFA447] rounded-[26px] p-5 text-white shadow-[0_14px_32px_-8px_rgba(234,88,12,0.5)]">
+              <div class="flex items-center gap-2 mb-1.5">
+                <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center">
+                  <i data-lucide="party-popper" class="w-5 h-5 text-amber-100"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-black leading-tight">完全開通！クリア！</h3>
+                  <p class="text-[11px] text-orange-100 font-bold">ミス ${state.seq.mistakes}回</p>
+                </div>
+              </div>
+              <p class="text-xs text-white/95 font-bold mt-2 mb-2 leading-relaxed">
+                交叉ポイント：${pw.crossing}
+              </p>
+              <div class="bg-black/15 backdrop-blur-xs rounded-2xl p-3 text-[11px] leading-relaxed mb-3.5">
+                💡 ${pw.memo}
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <button type="button" data-action="seq-retry" class="py-3 rounded-2xl bg-white/20 hover:bg-white/30 active:scale-95 font-extrabold text-xs transition">
+                  もう一回やる
+                </button>
+                <button type="button" data-action="seq-select" data-id="${nextPw.id}" class="py-3 rounded-2xl bg-white text-[#EA580C] hover:bg-orange-50 active:scale-95 font-black text-xs shadow-sm transition">
+                  次：${nextPw.shortName} →
+                </button>
+              </div>
+            </div>
+          ` : `
+            <div>
+              <div class="flex items-center justify-between mb-2.5 px-1">
+                <span class="text-xs font-extrabold text-[#6B5449]">順番にタップ（残り <span class="text-[#EA580C] tabular-nums">${pw.steps.length - state.seq.progress}</span>）</span>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" data-action="seq-hint" class="text-[11px] font-extrabold text-amber-700 hover:bg-amber-100 active:scale-95 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 transition">
+                    <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>ヒント
+                  </button>
+                  <button type="button" data-action="seq-retry" class="text-[11px] font-extrabold text-[#7C6559] hover:bg-orange-100/70 active:scale-95 px-2.5 py-1.5 rounded-xl bg-white border border-orange-200/70 transition">
+                    リセット
+                  </button>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                ${chipsHtml}
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function renderBinaryView() {
+      const filters = [
+        { id: 'all', label: 'ミックス' },
+        { id: 'order', label: '次の通過部位' },
+        { id: 'crossing', label: '交叉・体性感覚' },
+        { id: 'special', label: '特殊感覚' }
+      ];
+
+      const filterHtml = filters.map(f => `
+        <button type="button" data-action="bin-filter" data-filter="${f.id}"
+          class="shrink-0 px-3.5 py-2 rounded-2xl text-xs font-extrabold transition ${
+            state.bin.filter === f.id
+              ? 'bg-gradient-to-r from-[#FF6B2B] to-[#FF8B3E] text-white shadow-[0_6px_14px_-4px_rgba(234,88,12,0.45)]'
+              : 'bg-white/90 text-[#6B5449] border border-orange-200/70'
+          }">
+          ${f.label}
+        </button>
+      `).join('');
+
+      if (state.bin.finished) {
+        const rate = Math.round((state.bin.score / state.bin.queue.length) * 100);
+        return `
+          <div class="space-y-4">
+            <div class="flex gap-2 overflow-x-auto no-scrollbar">${filterHtml}</div>
+            <div class="animate-pop glass-card rounded-[28px] p-6 text-center">
+              <div class="w-16 h-16 mx-auto mb-3 rounded-3xl bg-gradient-to-br from-[#FF6B2B] to-[#FFA048] text-white flex items-center justify-center shadow-[0_10px_24px_-6px_rgba(234,88,12,0.5)]">
+                <i data-lucide="award" class="w-8 h-8"></i>
+              </div>
+              <p class="text-[11px] font-extrabold text-[#EA580C] uppercase tracking-wider mb-1">2択スピードテスト 結果</p>
+              <h2 class="text-4xl font-black text-[#2B1D16] tabular-nums mb-1">${state.bin.score} <span class="text-base font-bold text-[#9C8274]">/ ${state.bin.queue.length}問</span></h2>
+              <p class="text-xs font-bold text-[#7C6559] mb-5">正答率 ${rate}% ・ 最大 ${state.bin.maxCombo}連続（ベスト ${state.binaryBest}/10）</p>
+              <button type="button" data-action="bin-restart"
+                class="w-full py-4 rounded-2xl bg-gradient-to-r from-[#FF6B2B] to-[#FF8A3D] hover:brightness-105 active:scale-[0.98] text-white font-black text-sm shadow-[0_10px_24px_-6px_rgba(234,88,12,0.5)] transition">
+                もう1セット挑戦する（10問）
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      const q = state.bin.queue[state.bin.index];
+      const ans = state.bin.answered;
+      const pct = ((state.bin.index + (ans ? 1 : 0)) / state.bin.queue.length) * 100;
+
+      function choiceStyle(side) {
+        if (!ans) {
+          return 'tactile-chip text-[#2B1D16]';
+        }
+        if (side === q.correctSide) {
+          return 'bg-emerald-50 border-2 border-emerald-500 text-emerald-950 shadow-xs';
+        }
+        if (side === ans.selectedSide && !ans.isCorrect) {
+          return 'bg-rose-50 border-2 border-rose-500 text-rose-950 animate-shake';
+        }
+        return 'bg-orange-50/40 border border-orange-100 text-[#B89B8C]';
+      }
+
+      return `
+        <div class="space-y-4">
+          <div class="flex gap-2 overflow-x-auto no-scrollbar">${filterHtml}</div>
+
+          <!-- Progress & Combo Card -->
+          <div class="glass-card rounded-2xl p-3.5">
+            <div class="flex items-center justify-between text-xs font-extrabold mb-2">
+              <span class="text-[#6B5449] tabular-nums">Q.${state.bin.index + 1} <span class="text-[#B89B8C]">/ ${state.bin.queue.length}</span></span>
+              <div class="flex items-center gap-2.5">
+                <span class="text-emerald-600 tabular-nums">正解 ${state.bin.score}</span>
+                ${state.bin.combo >= 2
+                  ? `<span class="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[11px] font-black shadow-xs">🔥 ${state.bin.combo}連続</span>`
+                  : `<span class="text-[#9C8274] tabular-nums">ベスト ${state.binaryBest}/10</span>`}
+              </div>
+            </div>
+            <div class="w-full h-2.5 bg-orange-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-[#FF6B2B] via-[#FF8B3E] to-[#FFB347] rounded-full transition-all duration-300" style="width:${pct}%"></div>
+            </div>
+          </div>
+
+          <!-- Question Card -->
+          <div class="glass-card rounded-[28px] p-5">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-100/90 text-[#C2410C] text-[11px] font-extrabold mb-3">
+              <i data-lucide="sparkles" class="w-3 h-3"></i>
+              ${q.pathwayName}
+            </span>
+            <h2 class="text-[18px] font-black text-[#2B1D16] leading-snug tracking-tight mb-5">
+              ${q.prompt}
+            </h2>
+
+            <div class="grid grid-cols-1 gap-3">
+              <button type="button" data-action="bin-answer" data-side="left" ${ans ? 'disabled' : ''}
+                class="w-full min-h-[70px] px-4 py-3.5 rounded-2xl font-extrabold text-[15px] transition flex items-center justify-between text-left ${choiceStyle('left')}">
+                <span class="flex items-center gap-3">
+                  <span class="w-8 h-8 rounded-xl bg-orange-100/90 text-[#EA580C] text-xs font-black flex items-center justify-center shrink-0">A</span>
+                  <span>${q.left}</span>
+                </span>
+                ${ans && q.correctSide === 'left' ? '<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 shrink-0"></i>' : ''}
+                ${ans && ans.selectedSide === 'left' && !ans.isCorrect ? '<i data-lucide="x-circle" class="w-5 h-5 text-rose-600 shrink-0"></i>' : ''}
+              </button>
+
+              <button type="button" data-action="bin-answer" data-side="right" ${ans ? 'disabled' : ''}
+                class="w-full min-h-[70px] px-4 py-3.5 rounded-2xl font-extrabold text-[15px] transition flex items-center justify-between text-left ${choiceStyle('right')}">
+                <span class="flex items-center gap-3">
+                  <span class="w-8 h-8 rounded-xl bg-orange-100/90 text-[#EA580C] text-xs font-black flex items-center justify-center shrink-0">B</span>
+                  <span>${q.right}</span>
+                </span>
+                ${ans && q.correctSide === 'right' ? '<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 shrink-0"></i>' : ''}
+                ${ans && ans.selectedSide === 'right' && !ans.isCorrect ? '<i data-lucide="x-circle" class="w-5 h-5 text-rose-600 shrink-0"></i>' : ''}
+              </button>
+            </div>
+          </div>
+
+          <!-- Instant Feedback -->
+          ${ans ? `
+            <div class="animate-pop rounded-[24px] p-4 border ${ans.isCorrect ? 'bg-emerald-50/95 border-emerald-200' : 'bg-rose-50/95 border-rose-200'} shadow-sm">
+              <div class="flex items-center gap-1.5 font-black text-sm mb-1 ${ans.isCorrect ? 'text-emerald-800' : 'text-rose-800'}">
+                <i data-lucide="${ans.isCorrect ? 'sparkles' : 'info'}" class="w-4 h-4"></i>
+                ${ans.isCorrect ? 'ナイス！正解！' : '惜しい！ここをチェック'}
+              </div>
+              <p class="text-xs font-medium leading-relaxed ${ans.isCorrect ? 'text-emerald-900' : 'text-rose-900'} mb-3.5">
+                ${q.explain}
+              </p>
+              <button type="button" data-action="bin-next"
+                class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#2B1D16] to-[#4A3227] hover:brightness-110 active:scale-[0.98] text-white font-black text-sm shadow-md transition">
+                ${state.bin.index + 1 >= state.bin.queue.length ? '結果を見る →' : '次の問題へ →'}
+              </button>
+            </div>
+          ` : `
+            <p class="text-center text-[11px] text-[#9C8274] font-semibold">直感でタップしてテンポよく覚えよう！</p>
+          `}
+        </div>
+      `;
+    }
+
+    function renderFillView() {
+      const pw = getPathway(state.fill.pathwayId);
+      const meta = CATEGORY_META[pw.category];
+      const nextPw = PATHWAYS[(PATHWAYS.findIndex(p => p.id === pw.id) + 1) % PATHWAYS.length];
+
+      const selectorHtml = PATHWAYS.map(p => `
+        <button type="button" data-action="fill-select" data-id="${p.id}"
+          class="shrink-0 px-3.5 py-2 rounded-2xl text-xs font-extrabold transition ${
+            p.id === pw.id
+              ? 'bg-gradient-to-r from-[#FF6B2B] to-[#FF8B3E] text-white shadow-[0_6px_14px_-4px_rgba(234,88,12,0.45)]'
+              : 'bg-white/90 text-[#6B5449] border border-orange-200/70'
+          }">
+          ${p.shortName}
+        </button>
+      `).join('');
+
+      const nodesHtml = pw.steps.map((step, idx) => {
+        const isBlank = state.fill.blankIndices.includes(idx);
+        const isFilled = Boolean(state.fill.filled[idx]);
+        const isActive = state.fill.activeBlankIdx === idx;
+        const isLast = idx === pw.steps.length - 1;
+
+        return `
+          <div class="flex items-stretch gap-3">
+            <div class="flex flex-col items-center">
+              <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center text-[11px] font-black shrink-0 tabular-nums ${
+                isBlank && !isFilled
+                  ? isActive
+                    ? 'bg-gradient-to-br from-[#FF6B2B] to-[#EA580C] border-[#EA580C] text-white node-active'
+                    : 'bg-amber-100 border-amber-400 text-amber-800'
+                  : meta.nodeDone
+              }">
+                ${isBlank && !isFilled ? '?' : idx + 1}
+              </div>
+              ${!isLast ? `<div class="w-[2.5px] flex-1 min-h-[12px] my-0.5 bg-orange-100"></div>` : ''}
+            </div>
+            <div class="flex-1 pb-2">
+              ${isBlank && !isFilled
+                ? `<div class="rounded-2xl px-3.5 py-2 border-2 border-dashed ${
+                    isActive ? 'border-[#FF6B2B] bg-orange-50/90' : 'border-amber-300 bg-amber-50/50'
+                  } flex items-center justify-between gap-2">
+                     <span class="text-xs font-black ${isActive ? 'text-[#EA580C]' : 'text-amber-700'}">
+                       ${isActive ? 'ここに入る部位を選択 ▼' : '空欄'}
+                     </span>
+                     <span class="text-[10px] font-bold text-[#8C7062]">${step.tag}</span>
+                   </div>`
+                : `<div class="rounded-2xl px-3.5 py-2 border ${
+                    isFilled ? 'bg-emerald-50 border-emerald-300 animate-pop' : 'bg-white border-orange-100'
+                  } flex items-center justify-between gap-2">
+                     <span class="text-[13px] font-extrabold text-[#2B1D16]">${step.label}</span>
+                     <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isFilled ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-50 text-[#8C7062]'} shrink-0">${step.tag}</span>
+                   </div>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const choicesHtml = state.fill.choices.map(lbl => {
+        const isWrong = state.fill.wrongChoice === lbl;
+        return `
+          <button type="button" data-action="fill-choice" data-label="${lbl}"
+            class="px-3 py-3.5 rounded-2xl text-[13px] font-extrabold transition ${
+              isWrong
+                ? 'bg-rose-50 border-2 border-rose-500 text-rose-700 animate-shake'
+                : 'tactile-chip text-[#2B1D16]'
+            }">
+            ${lbl}
+          </button>
+        `;
+      }).join('');
+
+      return `
+        <div class="space-y-3.5">
+          <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">${selectorHtml}</div>
+
+          <div class="glass-card rounded-[26px] p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${meta.badgeBg}">${pw.direction}</span>
+              <span class="text-[11px] font-bold text-[#9C8274] tabular-nums">クリア累計 ${state.fillCleared}回</span>
+            </div>
+            <h2 class="text-[16px] font-black text-[#2B1D16] tracking-tight mb-3.5">${pw.name}</h2>
+            <div>${nodesHtml}</div>
+          </div>
+
+          ${state.fill.completed ? `
+            <div class="animate-pop bg-gradient-to-br from-[#FF5E1E] via-[#FF7A33] to-[#FFA447] text-white rounded-[26px] p-5 shadow-[0_14px_30px_-8px_rgba(234,88,12,0.5)]">
+              <h3 class="text-base font-black mb-1">回路完成！</h3>
+              <p class="text-xs text-orange-50 font-medium mb-3.5">${pw.crossing}</p>
+              <div class="grid grid-cols-2 gap-2.5">
+                <button type="button" data-action="fill-retry" class="py-3 rounded-2xl bg-white/20 hover:bg-white/30 active:scale-95 font-extrabold text-xs transition">
+                  別の空欄で再挑戦
+                </button>
+                <button type="button" data-action="fill-select" data-id="${nextPw.id}" class="py-3 rounded-2xl bg-white text-[#EA580C] active:scale-95 font-black text-xs shadow-sm transition">
+                  次：${nextPw.shortName} →
+                </button>
+              </div>
+            </div>
+          ` : `
+            <div>
+              <p class="text-xs font-extrabold text-[#6B5449] mb-2.5 px-1">空欄に入る構造を選んでください</p>
+              <div class="grid grid-cols-2 gap-2.5">${choicesHtml}</div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function renderGuideView() {
+      const filters = [
+        { id: 'all', label: 'すべて (10)' },
+        { id: 'descending', label: '下行性' },
+        { id: 'somatosensory', label: '体性感覚' },
+        { id: 'special', label: '特殊感覚' }
+      ];
+
+      const list = PATHWAYS.filter(p => state.guide.filter === 'all' || p.category === state.guide.filter);
+
+      const cardsHtml = list.map(pw => {
+        const meta = CATEGORY_META[pw.category];
+        const isOpen = state.guide.expandedId === pw.id;
+        const masteredCount = state.mastered[pw.id] || 0;
+
+        return `
+          <div class="glass-card rounded-[24px] overflow-hidden transition-all">
+            <button type="button" data-action="guide-toggle" data-id="${pw.id}"
+              class="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-orange-50/40 transition">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 mb-1">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${meta.badgeBg}">${pw.direction}</span>
+                  <span class="text-[10px] font-bold text-[#9C8274] tabular-nums">${pw.steps.length}ステップ</span>
+                  ${masteredCount > 0 ? `<span class="text-[10px] font-extrabold text-[#EA580C]">★ ${masteredCount}回</span>` : ''}
+                </div>
+                <h3 class="text-[14px] font-black text-[#2B1D16] truncate">${pw.name}</h3>
+                <p class="text-[11px] font-medium text-[#7C6559] truncate mt-0.5">${pw.crossing}</p>
+              </div>
+              <div class="w-8 h-8 rounded-xl bg-orange-50 text-[#EA580C] flex items-center justify-center shrink-0">
+                <i data-lucide="${isOpen ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4"></i>
+              </div>
+            </button>
+
+            ${isOpen ? `
+              <div class="px-4 pb-4 pt-2 border-t border-orange-100/80 space-y-3">
+                <div class="${meta.softBg} rounded-2xl p-3.5 text-xs text-[#4A372E] leading-relaxed">
+                  <p class="font-black text-[#2B1D16] mb-0.5">交叉・特徴</p>
+                  <p class="font-semibold">${pw.crossing}</p>
+                  <p class="mt-1.5 text-[11px] text-[#6B5449]">💡 ${pw.memo}</p>
+                </div>
+
+                <div class="space-y-1.5">
+                  ${pw.steps.map((st, idx) => {
+                    const key = `${pw.id}_${idx}`;
+                    const isHidden = state.guide.redSheet && !state.guide.revealedNodes[key];
+                    return `
+                      <div class="flex items-center gap-2.5">
+                        <span class="w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center shrink-0 tabular-nums ${meta.nodeDone}">${idx + 1}</span>
+                        <div data-action="guide-peek" data-key="${key}"
+                          class="flex-1 rounded-xl border border-orange-100 px-3 py-2 flex items-center justify-between gap-2 transition ${isHidden ? 'red-sheet-hidden' : 'bg-white'}">
+                          <span class="text-xs font-extrabold text-[#2B1D16]">${st.label}</span>
+                          <span class="text-[10px] font-bold text-[#8C7062] shrink-0">${st.tag}</span>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5 pt-1">
+                  <button type="button" data-action="guide-play-seq" data-id="${pw.id}"
+                    class="py-3 rounded-2xl bg-gradient-to-r from-[#FF6B2B] to-[#FF8A3D] text-white text-xs font-black shadow-sm active:scale-95 transition">
+                    順番タップで練習
+                  </button>
+                  <button type="button" data-action="guide-play-fill" data-id="${pw.id}"
+                    class="py-3 rounded-2xl bg-orange-50 border border-orange-200/80 text-[#C2410C] text-xs font-black active:scale-95 transition">
+                    穴埋めで練習
+                  </button>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="space-y-3.5">
+          <!-- Red Sheet Toggle Banner -->
+          <div class="glass-card rounded-[24px] p-4 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[13px] font-black text-[#2B1D16]">赤シート暗記モード</p>
+              <p class="text-[11px] font-medium text-[#7C6559]">部位名を隠してタップで答え合わせ</p>
+            </div>
+            <button type="button" data-action="guide-redsheet"
+              class="px-3.5 py-2.5 rounded-2xl text-xs font-black transition active:scale-95 flex items-center gap-1.5 shrink-0 ${
+                state.guide.redSheet
+                  ? 'bg-gradient-to-r from-[#FF4D2B] to-[#E11D48] text-white shadow-[0_6px_14px_-4px_rgba(225,29,72,0.5)]'
+                  : 'bg-orange-50 text-[#EA580C] border border-orange-200'
+              }">
+              <i data-lucide="eye-off" class="w-3.5 h-3.5"></i>
+              ${state.guide.redSheet ? '赤シート ON' : '赤シート OFF'}
+            </button>
+          </div>
+
+          <div class="flex gap-2 overflow-x-auto no-scrollbar">
+            ${filters.map(f => `
+              <button type="button" data-action="guide-filter" data-filter="${f.id}"
+                class="shrink-0 px-3.5 py-2 rounded-2xl text-xs font-extrabold transition ${
+                  state.guide.filter === f.id
+                    ? 'bg-gradient-to-r from-[#FF6B2B] to-[#FF8B3E] text-white shadow-[0_6px_14px_-4px_rgba(234,88,12,0.45)]'
+                    : 'bg-white/90 text-[#6B5449] border border-orange-200/70'
+                }">
+                ${f.label}
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="space-y-3">${cardsHtml}</div>
+        </div>
+      `;
+    }
+
+    function render() {
+      updateHeaderAndNav();
+      const main = document.getElementById('main-content');
+      if (!main) return;
+
+      if (state.activeTab === 'sequence') {
+        main.innerHTML = renderSequenceView();
+      } else if (state.activeTab === 'binary') {
+        main.innerHTML = renderBinaryView();
+      } else if (state.activeTab === 'fill') {
+        main.innerHTML = renderFillView();
+      } else {
+        main.innerHTML = renderGuideView();
+      }
+
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    // =========================================================
+    // 8. DELEGATED EVENT LISTENERS
+    // =========================================================
+    document.addEventListener('click', e => {
+      const navBtn = e.target.closest('.nav-btn');
+      if (navBtn) {
+        const tab = navBtn.dataset.tab;
+        state.activeTab = tab;
+        if (tab === 'binary' && state.bin.queue.length === 0) initBinary();
+        if (tab === 'fill' && state.fill.blankIndices.length === 0) initFill();
+        render();
+        document.getElementById('main-content').scrollTop = 0;
+        return;
+      }
+
+      const soundBtn = e.target.closest('#sound-toggle-btn');
+      if (soundBtn) {
+        state.soundOn = !state.soundOn;
+        saveProgress();
+        showToast(state.soundOn ? '効果音 ON' : '効果音 OFF');
+        render();
+        return;
+      }
+
+      const actionEl = e.target.closest('[data-action]');
+      if (!actionEl) return;
+      const action = actionEl.dataset.action;
+
+      switch (action) {
+        case 'seq-select':
+          initSequence(actionEl.dataset.id);
+          render();
+          break;
+        case 'seq-tap':
+          handleSequenceTap(actionEl.dataset.chip);
+          break;
+        case 'seq-hint':
+          handleSequenceHint();
+          break;
+        case 'seq-retry':
+          initSequence(state.seq.pathwayId);
+          render();
+          break;
+        case 'seq-toggle-hard':
+          state.seq.hardMode = !state.seq.hardMode;
+          initSequence(state.seq.pathwayId);
+          showToast(state.seq.hardMode ? 'ダミー2個を追加しました' : '標準モードに切り替えました');
+          render();
+          break;
+
+        case 'bin-filter':
+          initBinary(actionEl.dataset.filter);
+          render();
+          break;
+        case 'bin-answer':
+          handleBinaryAnswer(actionEl.dataset.side);
+          break;
+        case 'bin-next':
+          handleBinaryNext();
+          break;
+        case 'bin-restart':
+          initBinary(state.bin.filter);
+          render();
+          break;
+
+        case 'fill-select':
+          initFill(actionEl.dataset.id);
+          render();
+          break;
+        case 'fill-choice':
+          handleFillChoice(actionEl.dataset.label);
+          break;
+        case 'fill-retry':
+          initFill(state.fill.pathwayId);
+          render();
+          break;
+
+        case 'guide-filter':
+          state.guide.filter = actionEl.dataset.filter;
+          render();
+          break;
+        case 'guide-redsheet':
+          state.guide.redSheet = !state.guide.redSheet;
+          state.guide.revealedNodes = {};
+          render();
+          break;
+        case 'guide-toggle':
+          state.guide.expandedId = state.guide.expandedId === actionEl.dataset.id ? null : actionEl.dataset.id;
+          render();
+          break;
+        case 'guide-peek':
+          if (state.guide.redSheet) {
+            const k = actionEl.dataset.key;
+            state.guide.revealedNodes[k] = !state.guide.revealedNodes[k];
+            render();
+          }
+          break;
+        case 'guide-play-seq':
+          state.activeTab = 'sequence';
+          initSequence(actionEl.dataset.id);
+          render();
+          document.getElementById('main-content').scrollTop = 0;
+          break;
+        case 'guide-play-fill':
+          state.activeTab = 'fill';
+          initFill(actionEl.dataset.id);
+          render();
+          document.getElementById('main-content').scrollTop = 0;
+          break;
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (state.activeTab !== 'binary' || state.bin.finished) return;
+      if (!state.bin.answered) {
+        if (e.key === '1' || e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+          handleBinaryAnswer('left');
+        } else if (e.key === '2' || e.key === 'ArrowRight' || e.key === 'b' || e.key === 'B') {
+          handleBinaryAnswer('right');
+        }
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleBinaryNext();
+      }
+    });
+
+    initSequence('pyramidal_lateral');
+    initBinary('all');
+    initFill('pyramidal_lateral');
+    render();
+  </script>
+</body>
+</html>
